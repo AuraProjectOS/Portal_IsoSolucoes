@@ -6,3 +6,4 @@ requests>=2.31
 Pillow>=10.0
 reportlab>=4.0
 # sqlite3 is included in Python standard library - no need to install
+libsql>=0.1.11  # persistência via Turso (embedded replica); sem TURSO_* configurado, o app usa SQLite local normalmente

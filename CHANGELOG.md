@@ -2,6 +2,11 @@
 
 Todas as versões do Dashboard do Programa Parceiro Isopor (IsoSoluções).
 
+## v0.2 — 2026-07-01
+
+### Correção crítica
+- **Persistência real dos dados via Turso (opcional, recomendado).** Antes, os cadastros ficavam só num SQLite local que era resetado toda vez que o Streamlit Community Cloud reiniciava o app — causando perda de clientes cadastrados. Agora, se `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` forem configurados (veja `SETUP_TURSO.md`), os dados são sincronizados com um banco persistente na nuvem a cada gravação e sobrevivem a qualquer reinício. Sem essa configuração, o comportamento continua idêntico ao de antes (SQLite local), com um aviso visível na sidebar indicando o estado da persistência.
+
 ## v0.1 — 2026-06-25
 
 Primeira versão no ar. 🚀
