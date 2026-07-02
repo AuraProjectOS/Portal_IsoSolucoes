@@ -711,7 +711,6 @@ def render_client_portal():
         st.markdown(texts.get("client_how_it_works", "Regras do programa de fidelidade."))
         st.markdown(f"""
         - **1 pacote** = **1 ponto**
-        - **10 pontos** = **1 pacote grátis**
         - Seus pontos são diretos (cada pacote soma)
         - **🏆 500 pontos**: ganha **Cafeteira**
         """)
@@ -1094,7 +1093,7 @@ with chart_col2:
     Os pontos são **100% cumulativos**: cada ponto conquistado se soma diretamente ao saldo anterior.<br>
     <strong>Sem multiplicadores ou bônus por faixa de volume.</strong> Quanto mais você compra, mais pacotes grátis acumula.
     """)
-    st.caption("1 pacote = 1 ponto • 10 pontos = 1 pacote grátis • 500 pontos = Cafeteira")
+    st.caption("1 pacote = 1 ponto • 500 pontos = Cafeteira")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Top 10 + Linha extra ---

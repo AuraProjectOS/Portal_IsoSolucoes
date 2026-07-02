@@ -5,10 +5,9 @@ Dashboard completo, bonito e profissional feito em Streamlit para gestão do pro
 **Regras implementadas exatamente como definidas:**
 
 - A cada **R$ 38,00** em compras = **1 ponto**
-- A cada **10 pontos** = **1 pacote grátis** (qualquer espessura)
 - **Acumulação simples e crescente** (sem qualquer multiplicador ou bônus por faixa):
   - Cada ponto conquistado **soma diretamente** ao saldo anterior do cliente.
-  - A cada R$ 38 = 1 ponto • 10 pontos = 1 pacote grátis (qualquer espessura)
+  - A cada R$ 38 = 1 ponto
 - **🏆 Recompensa especial por volume (totalmente automática)**: Na compra/acúmulo de **500 pacotes** o cliente ganha à escolha: **Desconto de R$ 200,00**, **Pix de R$ 200,00**, **Liquidificador** ou **Cafeteira**. O sistema concede automaticamente (default Pix) quando o marco é atingido no registro de compra.
 
 ---

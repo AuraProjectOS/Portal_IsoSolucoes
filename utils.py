@@ -105,7 +105,6 @@ def create_promotional_message() -> str:
     return """🌟 *Programa Parceiro Isopor* - IsoSoluções 🌟
 
 A cada R$ 38 em compras = 1 ponto
-A cada 10 pontos = 1 pacote grátis (qualquer espessura!)
 
 Seus pontos são cumulativos: cada ponto conquistado se soma ao saldo anterior.
 
