@@ -94,7 +94,7 @@ def generate_user_manual(settings: Dict[str, Any] = None) -> BytesIO:
     """Gera manual de uso completo em PDF. Retorna BytesIO."""
     settings = settings or {}
     program_name = settings.get("program_name", "Programa Parceiro Isopor")
-    threshold = settings.get("redemption_threshold", "10")
+    milestone_reward = settings.get("milestone_reward", "Cafeteira")
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -142,9 +142,8 @@ def generate_user_manual(settings: Dict[str, Any] = None) -> BytesIO:
             [],
             [
                 "1 pacote comprado = 1 ponto",
-                f"A cada {threshold} pontos = 1 pacote grátis (qualquer espessura)",
                 "• Seus pontos são **cumulativos**: cada ponto soma ao saldo anterior (sem bônus por faixa mensal).",
-                "• Na compra/acúmulo de 500 pacotes: cliente escolhe entre 5 opções (Desconto R$ 200 / Pix R$ 200 / Liquidificador / Cafeteira / Torradeira)",
+                f"• Na compra/acúmulo de 500 pacotes: recompensa concedida automaticamente — **{milestone_reward}**",
             ],
         ),
         (

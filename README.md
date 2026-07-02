@@ -8,7 +8,7 @@ Dashboard completo, bonito e profissional feito em Streamlit para gestão do pro
 - **Acumulação simples e crescente** (sem qualquer multiplicador ou bônus por faixa):
   - Cada ponto conquistado **soma diretamente** ao saldo anterior do cliente.
   - A cada R$ 38 = 1 ponto
-- **🏆 Recompensa especial por volume (totalmente automática)**: Na compra/acúmulo de **500 pacotes** o cliente ganha à escolha: **Desconto de R$ 200,00**, **Pix de R$ 200,00**, **Liquidificador** ou **Cafeteira**. O sistema concede automaticamente (default Pix) quando o marco é atingido no registro de compra.
+- **🏆 Recompensa especial por volume (totalmente automática)**: Na compra/acúmulo de **500 pacotes** o cliente ganha a recompensa configurada (padrão: **Cafeteira**). O sistema concede automaticamente quando o marco é atingido no registro de compra.
 
 ---
 
