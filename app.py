@@ -62,6 +62,7 @@ from database import (
     seed_bulletin_updates,
     get_settings_changelog,
     persistence_status,
+    save_purchase_receipt,
 )
 from calculations import (
     format_currency,
@@ -811,6 +812,14 @@ def prepare_points_notification(client, result, notification_type="purchase"):
         phone=client["phone"],
         status="prepared",
     )
+    if notification_type == "purchase" and result.get("id"):
+        save_purchase_receipt(
+            client_id=client["id"],
+            purchase_id=result["id"],
+            purchase_date=result.get("date") or date.today().isoformat(),
+            message=whatsapp_msg,
+            card_image=card_buffer.getvalue(),
+        )
     return {
         "type": notification_type,
         "client_name": client["name"],

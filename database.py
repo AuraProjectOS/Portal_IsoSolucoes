@@ -332,6 +332,7 @@ def init_db() -> None:
     _migrate_create_bulletin_table()
     _migrate_create_settings_changelog()
     _migrate_purge_legacy_multiplier_settings()
+    _migrate_create_purchase_receipts_table()
 
 
 def _migrate_add_package_quantity() -> None:
@@ -436,6 +437,91 @@ def _migrate_purge_legacy_multiplier_settings() -> None:
         conn.commit()
     except Exception:
         pass
+    finally:
+        conn.close()
+
+
+def _migrate_create_purchase_receipts_table() -> None:
+    """Garante a tabela de recibos (imagem do cartão + texto do WhatsApp) de cada compra.
+    Mantém apenas os 10 recibos mais recentes por cliente (ver save_purchase_receipt).
+    """
+    conn = get_conn()
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS purchase_receipts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                client_id INTEGER NOT NULL,
+                purchase_id INTEGER NOT NULL,
+                purchase_date TEXT NOT NULL,
+                message TEXT NOT NULL,
+                card_image BLOB NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now', '-3 hours')),
+                FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+                FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE,
+                UNIQUE (purchase_id)
+            )
+        """)
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_purchase_receipts_client_date "
+            "ON purchase_receipts(client_id, purchase_date)"
+        )
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def save_purchase_receipt(
+    client_id: int,
+    purchase_id: int,
+    purchase_date: str,
+    message: str,
+    card_image: bytes,
+) -> int:
+    """Salva o recibo (imagem + texto) de uma compra e mantém só os 10 mais recentes por cliente.
+    Se a compra já tiver um recibo, ele é substituído (idempotente para permitir regeneração).
+    """
+    conn = get_conn()
+    try:
+        conn.execute("DELETE FROM purchase_receipts WHERE purchase_id = ?", (purchase_id,))
+
+        cur = conn.execute("""
+            INSERT INTO purchase_receipts (client_id, purchase_id, purchase_date, message, card_image)
+            VALUES (?, ?, ?, ?, ?)
+        """, (client_id, purchase_id, purchase_date, message, card_image))
+        receipt_id = cur.lastrowid
+
+        # Mantém apenas os 10 registros mais recentes deste cliente
+        conn.execute("""
+            DELETE FROM purchase_receipts
+            WHERE client_id = ?
+              AND id NOT IN (
+                  SELECT id FROM purchase_receipts
+                  WHERE client_id = ?
+                  ORDER BY purchase_date DESC, id DESC
+                  LIMIT 10
+              )
+        """, (client_id, client_id))
+
+        conn.commit()
+        return receipt_id
+    finally:
+        conn.close()
+
+
+def get_client_receipts(client_id: int, limit: int = 10) -> List[Dict[str, Any]]:
+    """Retorna os recibos (imagem + texto) mais recentes de um cliente, do mais novo ao mais antigo."""
+    conn = get_conn()
+    try:
+        rows = conn.execute("""
+            SELECT id, purchase_id, purchase_date, message, card_image, created_at
+            FROM purchase_receipts
+            WHERE client_id = ?
+            ORDER BY purchase_date DESC, id DESC
+            LIMIT ?
+        """, (client_id, limit)).fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
 
@@ -641,8 +727,8 @@ def register_purchase(
 
         # Mantemos o campo multiplier por compatibilidade com o schema antigo.
         # TODO para futuro: se adicionar multiplicador, calcular aqui e gravar.
-        conn.execute("""
-            INSERT INTO purchases 
+        cur = conn.execute("""
+            INSERT INTO purchases
             (client_id, purchase_date, amount, base_points, multiplier, final_points, package_quantity, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (client_id, date_str, amount, base_points, 1.0, final_points, qty, notes.strip()))
@@ -651,6 +737,7 @@ def register_purchase(
 
         # Retornar resumo simples
         return {
+            "id": cur.lastrowid,
             "final_points": final_points,
             "package_quantity": qty,
             "date": date_str,
