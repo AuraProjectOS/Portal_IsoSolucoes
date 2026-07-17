@@ -340,6 +340,7 @@ def init_db() -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             phone TEXT NOT NULL UNIQUE,
+            birthday TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now', '-3 hours'))
         );
 
@@ -419,6 +420,7 @@ def init_db() -> None:
 
     # Migração segura para DBs existentes (adiciona coluna de quantidade de pacotes)
     _migrate_add_package_quantity()
+    _migrate_add_client_birthday()
     _migrate_create_milestone_table()
     _migrate_create_bulletin_table()
     _migrate_create_settings_changelog()
@@ -432,6 +434,20 @@ def _migrate_add_package_quantity() -> None:
         cols = [r[1] for r in conn.execute("PRAGMA table_info(purchases)").fetchall()]
         if "package_quantity" not in cols:
             conn.execute("ALTER TABLE purchases ADD COLUMN package_quantity INTEGER NOT NULL DEFAULT 0")
+            conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def _migrate_add_client_birthday() -> None:
+    """Adiciona coluna birthday na tabela clients em DBs legados (idempotente)."""
+    conn = get_conn()
+    try:
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(clients)").fetchall()]
+        if "birthday" not in cols:
+            conn.execute("ALTER TABLE clients ADD COLUMN birthday TEXT")
             conn.commit()
     except Exception:
         pass
@@ -620,7 +636,7 @@ def get_all_clients_enriched(today: Optional[date] = None) -> List[Dict[str, Any
 
     conn = get_conn()
     try:
-        rows = conn.execute("SELECT id, name, phone, created_at FROM clients ORDER BY name").fetchall()
+        rows = conn.execute("SELECT id, name, phone, birthday, created_at FROM clients ORDER BY name").fetchall()
         clients = []
         for row in rows:
             stats = _compute_client_stats(conn, row["id"], today)
@@ -628,6 +644,7 @@ def get_all_clients_enriched(today: Optional[date] = None) -> List[Dict[str, Any
                 "id": row["id"],
                 "name": row["name"],
                 "phone": row["phone"],
+                "birthday": row["birthday"],
                 "created_at": row["created_at"],
                 **stats
             })
@@ -644,7 +661,7 @@ def get_client_by_id(client_id: int, today: Optional[date] = None) -> Optional[D
     conn = get_conn()
     try:
         row = conn.execute(
-            "SELECT id, name, phone, created_at FROM clients WHERE id = ?", (client_id,)
+            "SELECT id, name, phone, birthday, created_at FROM clients WHERE id = ?", (client_id,)
         ).fetchone()
         if not row:
             return None
@@ -653,6 +670,7 @@ def get_client_by_id(client_id: int, today: Optional[date] = None) -> Optional[D
             "id": row["id"],
             "name": row["name"],
             "phone": row["phone"],
+            "birthday": row["birthday"],
             "created_at": row["created_at"],
             **stats
         }
@@ -669,8 +687,8 @@ def search_clients(query: str, today: Optional[date] = None) -> List[Dict[str, A
     conn = get_conn()
     try:
         rows = conn.execute("""
-            SELECT id, name, phone, created_at 
-            FROM clients 
+            SELECT id, name, phone, birthday, created_at
+            FROM clients
             WHERE LOWER(name) LIKE ? OR LOWER(phone) LIKE ?
             ORDER BY name
         """, (q, q)).fetchall()
@@ -682,6 +700,7 @@ def search_clients(query: str, today: Optional[date] = None) -> List[Dict[str, A
                 "id": row["id"],
                 "name": row["name"],
                 "phone": row["phone"],
+                "birthday": row["birthday"],
                 "created_at": row["created_at"],
                 **stats
             })
@@ -690,16 +709,43 @@ def search_clients(query: str, today: Optional[date] = None) -> List[Dict[str, A
         conn.close()
 
 
-def add_client(name: str, phone: str) -> int:
-    """Cria novo cliente. Retorna o ID."""
+def _normalize_birthday(birthday: Any) -> Optional[str]:
+    """Normaliza a data de aniversário para 'YYYY-MM-DD' (ou None se vazio)."""
+    if not birthday:
+        return None
+    if isinstance(birthday, (date, datetime)):
+        return birthday.strftime("%Y-%m-%d")
+    return str(birthday).strip() or None
+
+
+def add_client(name: str, phone: str, birthday: Any = None) -> int:
+    """Cria novo cliente. Retorna o ID. birthday é opcional (date ou 'YYYY-MM-DD')."""
     conn = get_conn()
     try:
         cur = conn.execute(
-            "INSERT INTO clients (name, phone) VALUES (?, ?)",
-            (name.strip(), phone.strip())
+            "INSERT INTO clients (name, phone, birthday) VALUES (?, ?, ?)",
+            (name.strip(), phone.strip(), _normalize_birthday(birthday))
         )
         conn.commit()
         return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def update_client(
+    client_id: int,
+    name: str,
+    phone: str,
+    birthday: Any = None,
+) -> None:
+    """Edita os dados cadastrais de um cliente (nome, telefone e aniversário)."""
+    conn = get_conn()
+    try:
+        conn.execute(
+            "UPDATE clients SET name = ?, phone = ?, birthday = ? WHERE id = ?",
+            (name.strip(), phone.strip(), _normalize_birthday(birthday), client_id),
+        )
+        conn.commit()
     finally:
         conn.close()
 
@@ -747,6 +793,98 @@ def register_purchase(
             "date": date_str,
             "amount": amount,
         }
+    finally:
+        conn.close()
+
+
+def get_purchase_by_id(purchase_id: int) -> Optional[Dict[str, Any]]:
+    """Retorna uma compra específica (para edição/correção)."""
+    conn = get_conn()
+    try:
+        row = conn.execute("""
+            SELECT id, client_id, purchase_date, amount, base_points, multiplier,
+                   final_points, COALESCE(package_quantity, 0) AS package_quantity, notes
+            FROM purchases WHERE id = ?
+        """, (purchase_id,)).fetchone()
+        if not row:
+            return None
+        return {
+            "id": row["id"],
+            "client_id": row["client_id"],
+            "purchase_date": row["purchase_date"],
+            "amount": row["amount"],
+            "base_points": row["base_points"],
+            "multiplier": row["multiplier"],
+            "final_points": row["final_points"],
+            "package_quantity": int(row["package_quantity"] or 0),
+            "notes": row["notes"] or "",
+        }
+    finally:
+        conn.close()
+
+
+def update_purchase(
+    purchase_id: int,
+    amount: Optional[float] = None,
+    package_quantity: Optional[int] = None,
+    purchase_date: Optional[date] = None,
+    notes: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Corrige um lançamento de compra existente (ex: erro de digitação na
+    quantidade de pacotes ou no valor). Recalcula os pontos, pois na versão
+    simples 1 pacote = 1 ponto. Só altera os campos informados (não-None).
+    Retorna a compra atualizada ou None se não existir.
+    """
+    conn = get_conn()
+    try:
+        row = conn.execute(
+            "SELECT id, amount, COALESCE(package_quantity,0) AS package_quantity, "
+            "purchase_date, notes FROM purchases WHERE id = ?",
+            (purchase_id,),
+        ).fetchone()
+        if not row:
+            return None
+
+        new_amount = float(amount) if amount is not None else row["amount"]
+        new_qty = max(0, int(package_quantity)) if package_quantity is not None else int(row["package_quantity"] or 0)
+        new_date = purchase_date.isoformat() if purchase_date is not None else row["purchase_date"]
+        new_notes = notes.strip() if notes is not None else row["notes"]
+
+        # Versão simples: pontos = quantidade de pacotes
+        new_points = new_qty
+
+        conn.execute("""
+            UPDATE purchases
+            SET amount = ?, base_points = ?, final_points = ?,
+                package_quantity = ?, purchase_date = ?, notes = ?
+            WHERE id = ?
+        """, (new_amount, new_points, new_points, new_qty, new_date, new_notes, purchase_id))
+        conn.commit()
+
+        return {
+            "id": purchase_id,
+            "amount": new_amount,
+            "package_quantity": new_qty,
+            "final_points": new_points,
+            "purchase_date": new_date,
+            "notes": new_notes,
+        }
+    finally:
+        conn.close()
+
+
+def delete_purchase(purchase_id: int) -> bool:
+    """
+    Remove por completo um lançamento de compra (ex: registro feito por engano).
+    Os pontos e o total de pacotes do cliente são recalculados automaticamente,
+    pois derivam sempre da tabela de compras. Retorna True se algo foi removido.
+    """
+    conn = get_conn()
+    try:
+        cur = conn.execute("DELETE FROM purchases WHERE id = ?", (purchase_id,))
+        conn.commit()
+        return cur.rowcount > 0
     finally:
         conn.close()
 
