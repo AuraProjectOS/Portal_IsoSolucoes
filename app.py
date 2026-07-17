@@ -42,7 +42,10 @@ from database import (
     get_client_by_id,
     search_clients,
     add_client,
+    update_client,
     register_purchase,
+    update_purchase,
+    delete_purchase,
     claim_milestone_reward,
     get_client_history,
     get_dashboard_kpis,
@@ -543,6 +546,52 @@ query_params = st.query_params
 
 def get_first_name(full_name: str) -> str:
     return full_name.split()[0] if full_name else "Parceiro"
+
+
+def parse_birthday(birthday):
+    """Converte o aniversário salvo (str 'YYYY-MM-DD' ou date) em date, ou None."""
+    if not birthday:
+        return None
+    if isinstance(birthday, date):
+        return birthday
+    try:
+        return datetime.strptime(str(birthday)[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+
+
+def format_birthday_label(birthday) -> str:
+    """Rótulo amigável do aniversário: '15/03/1990 • 34 anos • 🎂 faltam 12 dias'."""
+    bday = parse_birthday(birthday)
+    if not bday:
+        return ""
+
+    today = date.today()
+    age = today.year - bday.year - ((today.month, today.day) < (bday.month, bday.day))
+
+    # Próximo aniversário (dias restantes)
+    try:
+        next_bday = bday.replace(year=today.year)
+    except ValueError:
+        # 29/02 em ano não bissexto → considera 28/02
+        next_bday = date(today.year, bday.month, 28)
+    if next_bday < today:
+        try:
+            next_bday = bday.replace(year=today.year + 1)
+        except ValueError:
+            next_bday = date(today.year + 1, bday.month, 28)
+
+    days_left = (next_bday - today).days
+    if days_left == 0:
+        soon = "🎉 é HOJE!"
+    elif days_left == 1:
+        soon = "🎂 é amanhã"
+    elif days_left <= 30:
+        soon = f"🎂 faltam {days_left} dias"
+    else:
+        soon = f"em {next_bday.strftime('%d/%m')}"
+
+    return f"{bday.strftime('%d/%m/%Y')} • {age} anos • {soon}"
 
 def render_client_portal():
     """Visão simplificada e bonita para o cliente (o que o admin envia por link ou WhatsApp)."""
@@ -1193,12 +1242,19 @@ if st.session_state.selected_client_id:
         # Sem resgate, mostrar progresso para 500
         remaining_pts = max(0, 500 - client.get("total_packages_bought", 0))
 
+        bday_label = format_birthday_label(client.get("birthday"))
+        bday_html = (
+            f'<div class="client-phone" style="margin-top:2px;">🎂 {bday_label}</div>'
+            if bday_label else ""
+        )
+
         st.markdown(f"""
         <div class="client-selected">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
                 <div>
                     <div class="client-name">{client['name']}</div>
                     <div class="client-phone">📞 {client['phone']}</div>
+                    {bday_html}
                 </div>
             </div>
 
@@ -1258,6 +1314,32 @@ if st.session_state.selected_client_id:
             </div>""",
             unsafe_allow_html=True
         )
+
+        # ---- EDITAR DADOS DO CLIENTE ----
+        with st.expander("✏️ Editar Cliente (nome, telefone, aniversário)", expanded=False):
+            with st.form(f"edit_client_form_{client['id']}"):
+                edit_name = st.text_input("Nome completo *", value=client["name"])
+                edit_phone = st.text_input("Telefone (com DDD) *", value=client["phone"])
+                edit_birthday = st.date_input(
+                    "🎂 Data de aniversário",
+                    value=parse_birthday(client.get("birthday")),
+                    min_value=date(1900, 1, 1),
+                    max_value=date.today(),
+                    format="DD/MM/YYYY",
+                    help="Deixe em branco para remover a data de aniversário.",
+                )
+                if st.form_submit_button("💾 Salvar Alterações", type="primary", width='stretch'):
+                    if edit_name.strip() and edit_phone.strip():
+                        try:
+                            update_client(client["id"], edit_name, edit_phone, edit_birthday)
+                            st.success("Dados do cliente atualizados com sucesso!")
+                            client = get_client_by_id(client["id"])
+                            refresh_data()
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Erro ao salvar: {e} (telefone pode já existir em outro cliente)")
+                    else:
+                        st.warning("Nome e telefone são obrigatórios.")
 
         # AÇÕES RÁPIDAS
         action_col1, action_col2 = st.columns([1, 1])
@@ -1488,6 +1570,60 @@ if st.session_state.selected_client_id:
         else:
             st.caption("Ainda não há movimentações para este cliente.")
 
+        # ---- CORRIGIR / REMOVER LANÇAMENTOS DE COMPRA ----
+        purchase_entries = [h for h in history if h["type"] == "purchase"]
+        if purchase_entries:
+            with st.expander("🛠️ Corrigir ou Remover Lançamentos (erro de digitação)", expanded=False):
+                st.caption(
+                    "Ajuste a quantidade de pacotes ou o valor de uma compra registrada por engano, "
+                    "ou remova o lançamento inteiro. Os pontos e o total de pacotes são recalculados na hora."
+                )
+                for p in purchase_entries:
+                    pid = p["id"]
+                    p_date = parse_birthday(p["date"]) or date.today()
+                    st.markdown(
+                        f"**Lançamento #{pid}** • {p['date']} • "
+                        f"{int(p.get('package_quantity', 0))} pacotes • "
+                        f"{format_currency(p['amount']) if p['amount'] else '—'}"
+                    )
+                    with st.form(f"fix_purchase_{pid}"):
+                        fc1, fc2, fc3 = st.columns(3)
+                        new_qty = fc1.number_input(
+                            "Pacotes (pontos)", min_value=0,
+                            value=int(p.get("package_quantity", 0)), step=1,
+                            key=f"fixqty_{pid}",
+                        )
+                        new_amount = fc2.number_input(
+                            "Valor (R$)", min_value=0.0,
+                            value=float(p["amount"] or 0.0), step=1.0, format="%.2f",
+                            key=f"fixamt_{pid}",
+                        )
+                        new_pdate = fc3.date_input(
+                            "Data", value=p_date, format="DD/MM/YYYY", key=f"fixdate_{pid}",
+                        )
+                        bc1, bc2 = st.columns(2)
+                        do_save = bc1.form_submit_button("💾 Salvar correção", type="primary", width='stretch')
+                        do_delete = bc2.form_submit_button("🗑️ Remover lançamento", width='stretch')
+
+                    if do_save:
+                        update_purchase(
+                            pid,
+                            amount=new_amount,
+                            package_quantity=int(new_qty),
+                            purchase_date=new_pdate,
+                        )
+                        st.success(f"Lançamento #{pid} corrigido para {int(new_qty)} pacotes.")
+                        refresh_data()
+                        st.rerun()
+
+                    if do_delete:
+                        delete_purchase(pid)
+                        st.warning(f"Lançamento #{pid} removido.")
+                        refresh_data()
+                        st.rerun()
+
+                    st.divider()
+
         # ================== ENVIAR PORTAL DO CLIENTE (O QUE VOCÊ MANDA PRO CLIENTE) ==================
         st.markdown("---")
         st.markdown("**📤 Enviar Portal do Cliente (o que você envia pro cliente)**")
@@ -1626,11 +1762,19 @@ with st.sidebar:
         with st.form("new_client_form"):
             new_name = st.text_input("Nome completo *")
             new_phone = st.text_input("Telefone (com DDD) *", placeholder="(11) 99999-0000")
+            new_birthday = st.date_input(
+                "🎂 Data de aniversário (opcional)",
+                value=None,
+                min_value=date(1900, 1, 1),
+                max_value=date.today(),
+                format="DD/MM/YYYY",
+                help="Fica vinculada ao cliente. Deixe em branco se não souber.",
+            )
 
             if st.form_submit_button("Cadastrar Cliente", type="primary"):
                 if new_name.strip() and new_phone.strip():
                     try:
-                        new_id = add_client(new_name, new_phone)
+                        new_id = add_client(new_name, new_phone, new_birthday)
                         st.success(f"Cliente **{new_name}** cadastrado com sucesso!")
                         select_client(new_id)
                         refresh_data()

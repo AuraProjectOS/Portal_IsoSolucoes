@@ -2,6 +2,13 @@
 
 Todas as versões do Dashboard do Programa Parceiro Isopor (IsoSoluções).
 
+## v0.3 — 2026-07-17
+
+### Novas funcionalidades
+- **🎂 Data de aniversário do cliente.** Agora é possível vincular a data de aniversário ao cadastrar um cliente (campo opcional) e ela aparece no card do cliente com idade e contagem de dias até o próximo aniversário.
+- **✏️ Edição de cliente.** Novo expander "Editar Cliente" no painel do cliente selecionado permite corrigir nome, telefone e data de aniversário a qualquer momento.
+- **🛠️ Corrigir ou remover lançamentos de compra.** Para casos de erro de digitação, cada compra registrada pode ter sua quantidade de pacotes, valor e data corrigidos — ou o lançamento inteiro pode ser removido. Os pontos e o total de pacotes são recalculados automaticamente.
+
 ## v0.2 — 2026-07-01
 
 ### Correção crítica
