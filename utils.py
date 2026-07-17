@@ -59,11 +59,11 @@ def create_redemption_message(
     """Mensagem de confirmação de resgate de pacote."""
     pkg_word = "pacote" if packages == 1 else "pacotes"
 
-    msg = f"""Parabéns {client_name.split()[0]}! 🎉
+    msg = f"""Parabéns {client_name.split()[0]}! 
 
 Seu resgate foi realizado com sucesso:
 
-📦 *{packages} {pkg_word} grátis* resgatado(s)
+*{packages} {pkg_word} grátis* resgatado(s)
    ({points_deducted} pontos utilizados)
 
 Seu novo saldo: *{remaining_points} pontos*
@@ -71,7 +71,7 @@ Seu novo saldo: *{remaining_points} pontos*
 O pacote está separado e pode ser retirado quando quiser. 
 Qualquer espessura! É só avisar.
 
-Obrigado por ser um parceiro fiel do IsoSoluções! 💚
+Obrigado por ser um parceiro fiel do IsoSoluções! 
 
 _IsoSoluções • Programa Parceiro Isopor_"""
 
@@ -89,20 +89,20 @@ def create_monthly_summary_message(
 
     msg = f"""Resumo do seu mês no Programa Parceiro Isopor, {client_name.split()[0]}!
 
-📅 Pacotes comprados: *{spent_str}*
-⭐ Pontos ganhos: *{points_this_month}*
+Pacotes comprados: *{spent_str}*
+Pontos ganhos: *{points_this_month}*
 
 Continue comprando para chegar aos 500 pontos e ganhar a Cafeteira!
 
 Obrigado!
-Equipe IsoSoluções 💚"""
+Equipe IsoSoluções """
 
     return msg
 
 
 def create_promotional_message() -> str:
     """Mensagem geral de divulgação do programa (para usar em grupos ou novos clientes) — sem bônus mensal."""
-    return """🌟 *Programa Parceiro Isopor* - IsoSoluções 🌟
+    return """*Programa Parceiro Isopor* - IsoSoluções 
 
 A cada R$ 38 em compras = 1 ponto
 A cada 10 pontos = 1 pacote grátis (qualquer espessura!)
@@ -113,7 +113,7 @@ Quanto mais você compra, mais pacotes grátis resgata!
 
 Quer participar? É só falar comigo que eu já cadastro você.
 
-_IsoSoluções • Qualidade e fidelidade que você merece_ 💚"""
+_IsoSoluções • Qualidade e fidelidade que você merece_ """
 
 
 def create_milestone_reward_message(
@@ -123,13 +123,13 @@ def create_milestone_reward_message(
 ) -> str:
     """Mensagem simples quando bate 500 pontos."""
     first = client_name.split()[0] if client_name else "Parceiro"
-    msg = f"""Parabéns {first}! 🏆
+    msg = f"""Parabéns {first}! 
 
 Você chegou a 500 pontos!
 
 Brinde: **{reward_description}**
 
-Pode retirar quando quiser. Obrigado pela confiança! 💚"""
+Pode retirar quando quiser. Obrigado pela confiança! """
     return msg
 
 
@@ -187,7 +187,7 @@ def export_full_report(
 
     # Título
     ws.merge_cells("A1:F1")
-    ws["A1"] = "📊 RELATÓRIO COMPLETO - PROGRAMA PARCEIRO ISOPOR"
+    ws["A1"] = "RELATÓRIO COMPLETO - PROGRAMA PARCEIRO ISOPOR"
     ws["A1"].font = Font(bold=True, size=16, color="10b981")
     ws["A1"].alignment = Alignment(horizontal="center")
 

@@ -66,7 +66,7 @@ def render_bulletin_board(client_view: bool = False, max_items: int = 4) -> None
         f"""
         <div class="bulletin-board {'bulletin-board-client' if client_view else ''}">
             <div class="bulletin-board-header">
-                <span class="bulletin-board-icon">📌</span>
+                <span class="bulletin-board-icon"></span>
                 <span class="bulletin-board-label">{label}</span>
             </div>
             <div class="bulletin-board-items">
@@ -80,7 +80,7 @@ def render_bulletin_board(client_view: bool = False, max_items: int = 4) -> None
 
 def render_bulletin_admin_panel() -> None:
     """Painel de gestão do mural na sidebar do admin."""
-    with st.expander("📌 Mural de Atualizações", expanded=False):
+    with st.expander("Mural de Atualizações", expanded=False):
         st.caption("Publique avisos visíveis no painel admin e no portal do cliente.")
 
         with st.form("new_bulletin_form", clear_on_submit=True):
@@ -108,12 +108,12 @@ def render_bulletin_admin_panel() -> None:
             return
 
         for item in all_updates:
-            status = "🟢" if item.get("is_active") else "⚪"
-            client_flag = "👤" if item.get("show_to_clients") else "🔒"
+            status = "Ativo" if item.get("is_active") else "Inativo"
+            client_flag = "Clientes" if item.get("show_to_clients") else "Interno"
             date_label = _format_date(item.get("updated_at") or item.get("created_at", ""))
 
             with st.container(border=True):
-                st.markdown(f"{status} {client_flag} **{item['title']}** — _{date_label}_")
+                st.markdown(f"[{status} · {client_flag}] **{item['title']}** — _{date_label}_")
                 st.caption(item["content"][:120] + ("..." if len(item["content"]) > 120 else ""))
 
                 edit_key = f"edit_bulletin_{item['id']}"
