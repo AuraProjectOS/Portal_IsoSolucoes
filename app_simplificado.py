@@ -28,7 +28,7 @@ from notifications import build_whatsapp_url
 # ================== CONFIGURAÇÃO DA PÁGINA ==================
 st.set_page_config(
     page_title="IsoSoluções | Programa Parceiro Isopor (Simplificado)",
-    page_icon="♻️",
+    page_icon=None,
     layout="wide",
 )
 
@@ -85,7 +85,7 @@ if st.button("Carregar Cliente"):
 
                 # Link para WhatsApp
                 wa_url = build_whatsapp_url(client['phone'], mensagem)
-                st.link_button("📱 Enviar no WhatsApp", wa_url)
+                st.link_button("Enviar no WhatsApp", wa_url)
 
     else:
         st.error("Cliente não encontrado.")

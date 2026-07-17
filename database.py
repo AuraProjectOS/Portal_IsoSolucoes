@@ -1239,7 +1239,7 @@ DEFAULT_SETTINGS = {
     "footer_text": "IsoSoluções • Programa Parceiro Isopor • Desenvolvido com carinho\nDados armazenados localmente em SQLite • Tudo 100% offline e seguro",
 
     # Templates de WhatsApp (o admin pode editar livremente, use {placeholders})
-    "whatsapp_purchase": """Olá {first_name}! 👋
+    "whatsapp_purchase": """Olá {first_name}! 
 
 +{final_points} ponto(s) (1 por pacote comprado)
 
@@ -1249,18 +1249,18 @@ Saldo atual: {current_points} pontos
 
 {progress_message}
 
-Obrigado! 💚""",
+Obrigado! """,
 
     "whatsapp_monthly": """Resumo do seu mês no {program_name}, {first_name}!
 
-📅 Pacotes comprados este mês: *{monthly_spent}*
-⭐ Pontos totais: *{points_this_month}*
+Pacotes comprados este mês: *{monthly_spent}*
+Pontos totais: *{points_this_month}*
 
 Continue comprando! Ao chegar em 500 pontos você ganha uma Cafeteira.
 
-Obrigado! 💚""",
+Obrigado! """,
 
-    "whatsapp_promo": """🌟 {program_name} 🌟
+    "whatsapp_promo": """{program_name} 
 
 1 pacote comprado = 1 ponto
 
@@ -1268,9 +1268,9 @@ Ao atingir 500 pontos: ganha 1 Cafeteira
 
 Acompanhe seus pontos pelo link que enviamos.
 
-Quer participar? É só falar comigo! 💚""",
+Quer participar? É só falar comigo! """,
 
-    "whatsapp_milestone_500": """Parabéns {first_name}! 🏆🎉
+    "whatsapp_milestone_500": """Parabéns {first_name}! 
 
 Você atingiu 500 pontos!
 
@@ -1296,7 +1296,7 @@ Acompanhe seu painel: {client_link}""",
     "card_title": "Parabéns! Você ganhou pontos!",
     "card_subtitle": "Programa Parceiro Isopor",
     "card_footer": "IsoSoluções • Aura Project • Qualidade e fidelidade",
-    "card_emoji": "🎉",
+    "card_emoji": "",
     "card_primary_color": "#0D9488",
     "card_secondary_color": "#0f172a",
     "card_accent_color": "#10b981",
@@ -1785,6 +1785,6 @@ def seed_demo_data(force: bool = False) -> None:
 
         conn.commit()
         seed_bulletin_updates()
-        print("✅ Dados de demonstração criados com sucesso! (incluindo demo do marco 500 pacotes)")
+        print("Dados de demonstração criados com sucesso! (incluindo demo do marco 500 pacotes)")
     finally:
         conn.close()

@@ -2,6 +2,12 @@
 
 Todas as versões do Dashboard do Programa Parceiro Isopor (IsoSoluções).
 
+## v0.4 — 2026-07-17
+
+### Limpeza visual
+- **Remoção de todos os emojis da interface.** Todos os emojis foram retirados das telas do dashboard, do portal do cliente e das mensagens de WhatsApp/relatórios, deixando a aparência mais sóbria e profissional. Onde o emoji servia como indicador (status de aviso, tipo de movimentação), ele foi substituído por rótulos de texto (ex.: `[Ativo · Clientes]`, `[Compra]`).
+- **Correção de código HTML visível na tela.** Removida a meta tag de viewport injetada via `st.markdown` (que o Streamlit exibia como texto cru) e os wrappers `<div class="chart-container">` que eram abertos e fechados em chamadas separadas, fazendo com que `</div>` aparecesse como texto solto na página.
+
 ## v0.3 — 2026-07-17
 
 ### Novas funcionalidades

@@ -92,15 +92,10 @@ from bulletin_board import render_bulletin_board, render_bulletin_admin_panel
 # ================== CONFIGURAÇÃO DA PÁGINA ==================
 st.set_page_config(
     page_title="IsoSoluções | Programa Parceiro Isopor",
-    page_icon="♻️",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# Meta viewport para melhor responsividade em dispositivos móveis
-st.markdown("""
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-""", unsafe_allow_html=True)
 
 # ================== TEMA ESCURO + CSS PROFISSIONAL ==================
 st.markdown("""
@@ -561,7 +556,7 @@ def parse_birthday(birthday):
 
 
 def format_birthday_label(birthday) -> str:
-    """Rótulo amigável do aniversário: '15/03/1990 • 34 anos • 🎂 faltam 12 dias'."""
+    """Rótulo amigável do aniversário: '15/03/1990 • 34 anos • faltam 12 dias'."""
     bday = parse_birthday(birthday)
     if not bday:
         return ""
@@ -583,11 +578,11 @@ def format_birthday_label(birthday) -> str:
 
     days_left = (next_bday - today).days
     if days_left == 0:
-        soon = "🎉 é HOJE!"
+        soon = "é HOJE!"
     elif days_left == 1:
-        soon = "🎂 é amanhã"
+        soon = "é amanhã"
     elif days_left <= 30:
-        soon = f"🎂 faltam {days_left} dias"
+        soon = f"faltam {days_left} dias"
     else:
         soon = f"em {next_bday.strftime('%d/%m')}"
 
@@ -626,7 +621,7 @@ def render_client_portal():
     threshold = 10  # dummy, não usado
     rate = 1.0  # dummy
 
-    st.set_page_config(page_title=f"{client['name']} | IsoSoluções", page_icon="♻️", layout="centered")
+    st.set_page_config(page_title=f"{client['name']} | IsoSoluções", page_icon=None, layout="centered")
 
     # Header bonito para cliente
     st.markdown('<div style="text-align:center; font-size:1.9rem; font-weight:700; margin-bottom:4px;"><span style="color:#0D9488;">Iso</span><span style="color:#B91C1C;">Soluções</span></div>', unsafe_allow_html=True)
@@ -640,7 +635,7 @@ def render_client_portal():
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"**Olá, {get_first_name(client['name'])}!** 👋")
+    st.markdown(f"**Olá, {get_first_name(client['name'])}!** ")
     st.caption(texts.get("client_portal_intro", "Acompanhe seus pontos e benefícios."))
 
     render_bulletin_board(client_view=True, max_items=3)
@@ -648,7 +643,7 @@ def render_client_portal():
     # Cards principais para o cliente (bonitos e grandes)
     c1, c2 = st.columns(2)
     with c1:
-        st.metric("⭐ Seus Pontos (1 por pacote)", client["current_points"])
+        st.metric("Seus Pontos (1 por pacote)", client["current_points"])
     with c2:
         st.metric("Progresso para Cafeteira", f"{client.get('total_packages_bought', 0)} / 500")
 
@@ -657,7 +652,7 @@ def render_client_portal():
 
     mile = rewards["milestone_500"]
     pct = mile["percent"] / 100.0
-    st.markdown("**🎯 Progresso para Cafeteira (500 pontos)**")
+    st.markdown("**Progresso para Cafeteira (500 pontos)**")
     st.progress(pct, text=mile["progress_text"])
 
     # Apresentação das 5 opções para o cliente escolher (novo)
@@ -666,14 +661,14 @@ def render_client_portal():
     has_milestone = client.get("has_milestone_500", False)
     if total_bought >= milestone_th and not has_milestone:
         st.markdown("---")
-        st.markdown("### 🏆🎁 **Você atingiu 500 pontos!**")
+        st.markdown("### **Você atingiu 500 pontos!**")
         st.success("Brinde: **Cafeteira**")
 
         texts = get_program_texts()
         program_name = texts.get("program_name", "Programa Parceiro Isopor")
         first_name = get_first_name(client["name"])
 
-        if st.button("📱 Avisar por WhatsApp que quero a Cafeteira", type="primary"):
+        if st.button("Avisar por WhatsApp que quero a Cafeteira", type="primary"):
             wa_msg = f"Olá! Atingi 500 pontos no {program_name}. Quero a Cafeteira como brinde!"
             wa_url = build_whatsapp_url(client["phone"], wa_msg)
             st.markdown(f"[Abrir WhatsApp]({wa_url})", unsafe_allow_html=True)
@@ -682,26 +677,26 @@ def render_client_portal():
     st.markdown(f"**Volume este mês:** {format_currency(client['monthly_spent'])}")
 
     # Como funciona (texto personalizável pelo admin)
-    with st.expander("📖 Como funciona o programa (regras atuais)", expanded=False):
+    with st.expander("Como funciona o programa (regras atuais)", expanded=False):
         st.markdown(texts.get("client_how_it_works", "Regras do programa de fidelidade."))
         st.markdown(f"""
         - **1 pacote** = **1 ponto**
         - **10 pontos** = **1 pacote grátis**
         - Seus pontos são diretos (cada pacote soma)
-        - **🏆 500 pontos**: ganha **Cafeteira**
+        - **500 pontos**: ganha **Cafeteira**
         """)
 
     # Histórico recente (últimas 6)
-    st.markdown("**🕒 Suas últimas movimentações**")
+    st.markdown("**Suas últimas movimentações**")
     history = get_client_history(client["id"])[:6]
     if history:
         for h in history:
             if h["type"] == "purchase":
-                st.write(f"💰 **{h['date']}** — Compra de {format_currency(h['amount'])} → **+{h['points']} pts**")
+                st.write(f"**{h['date']}** — Compra de {format_currency(h['amount'])} → **+{h['points']} pts**")
             elif h["type"] == "redemption":
-                st.write(f"🎁 **{h['date']}** — Resgate de pacote(s) → **{h['points']} pts**")
+                st.write(f"**{h['date']}** — Resgate de pacote(s) → **{h['points']} pts**")
             else:
-                st.write(f"🏆 **{h['date']}** — {h['notes']}")
+                st.write(f"**{h['date']}** — {h['notes']}")
     else:
         st.caption("Nenhuma movimentação ainda. Comece a comprar e acumule!")
 
@@ -712,7 +707,7 @@ def render_client_portal():
     _newline = '\n'
     wa_link = f"https://wa.me/?text={contact_msg.replace(' ', '%20').replace(_newline, '%0A')}"
 
-    if st.button("💬 Falar no WhatsApp com a equipe", type="primary", width='stretch'):
+    if st.button("Falar no WhatsApp com a equipe", type="primary", width='stretch'):
         st.markdown(f"[Abrir WhatsApp]({wa_link})", unsafe_allow_html=True)
 
     st.caption("Link gerado com seus dados atuais. A equipe Aura pode confirmar seu resgate.")
@@ -808,9 +803,9 @@ def render_notification_panel(notification: dict):
 
     st.markdown("---")
     if notification.get("type") == "milestone":
-        st.markdown("### 🏆 Aviso Automático — Recompensa 500 Pacotes")
+        st.markdown("### Aviso Automático — Recompensa 500 Pacotes")
     else:
-        st.markdown("### 📲 Aviso Automático de Pontos")
+        st.markdown("### Aviso Automático de Pontos")
 
     if notification["type"] == "purchase":
         st.success(
@@ -838,7 +833,7 @@ def render_notification_panel(notification: dict):
 
         if has_card:
             st.download_button(
-                label="1️⃣ Baixar Cartão de Pontos (PNG)",
+                label="1Baixar Cartão de Pontos (PNG)",
                 data=notification["card_png"],
                 file_name=f"cartao_pontos_{notification['client_name'].split()[0].lower()}.png",
                 mime="image/png",
@@ -846,7 +841,7 @@ def render_notification_panel(notification: dict):
             )
 
         st.link_button(
-            "2️⃣ Abrir WhatsApp e enviar mensagem",
+            "2Abrir WhatsApp e enviar mensagem",
             notification["wa_url"],
             type="primary",
             width='stretch',
@@ -856,7 +851,7 @@ def render_notification_panel(notification: dict):
             st.caption("Baixe o cartão (passo 1), abra o WhatsApp (passo 2) e envie o PNG como anexo junto com a mensagem.")
 
         # Automação: após clicar no WhatsApp, o admin pode limpar o painel de aviso
-        if st.button("✅ Limpar este aviso (após enviar)", key=f"clear_notif_{notification.get('client_name','')}", width='stretch'):
+        if st.button("Limpar este aviso (após enviar)", key=f"clear_notif_{notification.get('client_name','')}", width='stretch'):
             st.session_state.pending_notification = None
             st.rerun()
 
@@ -937,7 +932,7 @@ with kpi_col1:
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-accent"></div>
-        <div class="kpi-label">👥 Total de Clientes</div>
+        <div class="kpi-label">Total de Clientes</div>
         <div class="kpi-value">{kpis['total_clients']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -946,7 +941,7 @@ with kpi_col2:
     st.markdown(f"""
     <div class="kpi-card blue">
         <div class="kpi-accent"></div>
-        <div class="kpi-label">⭐ Pontos Distribuídos Hoje</div>
+        <div class="kpi-label">Pontos Distribuídos Hoje</div>
         <div class="kpi-value">{kpis['points_today']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -955,7 +950,7 @@ with kpi_col3:
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-accent"></div>
-        <div class="kpi-label">📦 Pacotes Resgatados (Mês)</div>
+        <div class="kpi-label">Pacotes Resgatados (Mês)</div>
         <div class="kpi-value">{kpis['packages_redeemed_month']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -964,7 +959,7 @@ with kpi_col4:
     st.markdown(f"""
     <div class="kpi-card amber">
         <div class="kpi-accent"></div>
-        <div class="kpi-label">💰 Volume de Compras (Mês)</div>
+        <div class="kpi-label">Volume de Compras (Mês)</div>
         <div class="kpi-value">{format_currency(kpis['volume_month'])}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -975,7 +970,7 @@ kpi2_col1, kpi2_col2, kpi2_col3 = st.columns(3)
 with kpi2_col1:
     st.markdown(f"""
     <div class="kpi-card" style="padding:0.65rem 1rem; font-size:0.9rem;">
-        <div class="kpi-label" style="font-size:0.7rem;">🏆 Clientes com Cafeteira</div>
+        <div class="kpi-label" style="font-size:0.7rem;">Clientes com Cafeteira</div>
         <div class="kpi-value" style="font-size:1.35rem;">{kpis.get('milestone_clients', 0)}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -983,7 +978,7 @@ with kpi2_col1:
 with kpi2_col2:
     st.markdown(f"""
     <div class="kpi-card" style="padding:0.65rem 1rem; font-size:0.9rem;">
-        <div class="kpi-label" style="font-size:0.7rem;">🔄 Pontos em Circulação</div>
+        <div class="kpi-label" style="font-size:0.7rem;">Pontos em Circulação</div>
         <div class="kpi-value" style="font-size:1.35rem;">{kpis['circulating_points']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -992,7 +987,7 @@ with kpi2_col3:
     # Mini resumo (pacotes disponíveis no sistema — acumulação simples)
     st.markdown(f"""
     <div class="kpi-card" style="padding:0.65rem 1rem; font-size:0.9rem;">
-        <div class="kpi-label" style="font-size:0.7rem;">🎯 Clientes na meta 500</div>
+        <div class="kpi-label" style="font-size:0.7rem;">Clientes na meta 500</div>
         <div class="kpi-value" style="font-size:1.35rem;">{kpis.get('milestone_clients', 0)}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -1000,13 +995,12 @@ with kpi2_col3:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ================== GRÁFICOS ==================
-st.markdown('<div class="section-header">📊 Visão Geral do Programa</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Visão Geral do Programa</div>', unsafe_allow_html=True)
 
 chart_col1, chart_col2 = st.columns(2)
 
 # --- Gráfico 1: Evolução Mensal de Compras e Pontos ---
 with chart_col1:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     monthly_data = get_monthly_purchase_history(months_back=7)
 
     if monthly_data:
@@ -1054,24 +1048,20 @@ with chart_col1:
         st.plotly_chart(fig1, width='stretch', config={"displayModeBar": False})
     else:
         st.info("Sem dados de histórico mensal ainda.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Info do programa (livre de multiplicadores) ---
 with chart_col2:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.markdown("**📌 Acumulação Simples**")
+    st.markdown("**Acumulação Simples**")
     st.markdown("""
     Os pontos são **100% cumulativos**: cada ponto conquistado se soma diretamente ao saldo anterior.<br>
     <strong>Sem multiplicadores ou bônus por faixa de volume.</strong> Quanto mais você compra, mais pacotes grátis acumula.
     """)
     st.caption("1 pacote = 1 ponto • 10 pontos = 1 pacote grátis • 500 pontos = Cafeteira")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Top 10 + Linha extra ---
 chart_col3, chart_col4 = st.columns(2)
 
 with chart_col3:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     top_clients = get_top_clients_by_points(limit=10)
 
     if top_clients:
@@ -1091,7 +1081,7 @@ with chart_col3:
             template="plotly_dark",
             paper_bgcolor="#1e2937",
             plot_bgcolor="#1e2937",
-            title=dict(text="🏆 Top 10 Clientes Mais Fiéis (Pontos Acumulados)", font=dict(size=14, color="#f1f5f9")),
+            title=dict(text="Top 10 Clientes Mais Fiéis (Pontos Acumulados)", font=dict(size=14, color="#f1f5f9")),
             height=340,
             margin=dict(l=10, r=10, t=35, b=10),
             coloraxis_showscale=False,
@@ -1102,22 +1092,20 @@ with chart_col3:
         st.plotly_chart(fig3, width='stretch', config={"displayModeBar": False})
     else:
         st.info("Sem clientes suficientes para ranking.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Atividade Recente ---
 with chart_col4:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.markdown("**🕒 Últimas Movimentações**", unsafe_allow_html=True)
+    st.markdown("**Últimas Movimentações**", unsafe_allow_html=True)
 
     recent = get_recent_activity(limit=7)
     if recent:
         for act in recent:
             if act["type"] == "purchase":
-                icon = "💰"
+                icon = ""
                 color = "#10b981"
                 detail = f"+{act['points']} pts • {format_currency(act['amount'])}"
             else:
-                icon = "🎁"
+                icon = ""
                 color = "#f59e0b"
                 detail = f"-{abs(act['points'])} pts • Resgate de pacote(s)"
 
@@ -1140,19 +1128,18 @@ with chart_col4:
             )
     else:
         st.caption("Nenhuma movimentação registrada ainda.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ================== SEÇÃO DE GESTÃO DE CLIENTES ==================
-st.markdown('<div class="section-header">👥 Gestão de Clientes</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Gestão de Clientes</div>', unsafe_allow_html=True)
 
 # Filtros e busca (sistema puro de acumulação simples)
 filter_col1, filter_col2, filter_col3 = st.columns([2.4, 1.2, 1.3])
 
 with filter_col1:
     search_query = st.text_input(
-        "🔍 Buscar por nome ou telefone",
+        "Buscar por nome ou telefone",
         placeholder="Ex: Ana ou 98765...",
         label_visibility="collapsed",
     )
@@ -1235,7 +1222,7 @@ if st.session_state.selected_client_id:
 
     if client:
         st.markdown("---")
-        st.markdown('<div class="section-header">🎯 Cliente Selecionado</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Cliente Selecionado</div>', unsafe_allow_html=True)
 
         # Card grande do cliente (acumulação simples sem multiplicadores)
         # redemption_threshold removido (sem resgate)
@@ -1244,7 +1231,7 @@ if st.session_state.selected_client_id:
 
         bday_label = format_birthday_label(client.get("birthday"))
         bday_html = (
-            f'<div class="client-phone" style="margin-top:2px;">🎂 {bday_label}</div>'
+            f'<div class="client-phone" style="margin-top:2px;">{bday_label}</div>'
             if bday_label else ""
         )
 
@@ -1253,7 +1240,7 @@ if st.session_state.selected_client_id:
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
                 <div>
                     <div class="client-name">{client['name']}</div>
-                    <div class="client-phone">📞 {client['phone']}</div>
+                    <div class="client-phone">{client['phone']}</div>
                     {bday_html}
                 </div>
             </div>
@@ -1284,7 +1271,7 @@ if st.session_state.selected_client_id:
             <!-- Progresso para o novo marco de 500 pacotes (especial) -->
             <div style="margin-top:0.7rem;">
                 <div style="font-size:0.75rem; color:#64748b; margin-bottom:3px;">
-                    🏆 PROGRESSO MARCO 500 PACOTES (recompensa especial)
+                    PROGRESSO MARCO 500 PACOTES (recompensa especial)
                 </div>
                 <div style="background:#334155; border-radius:999px; height:9px; overflow:hidden;">
                     <div style="width:{min(100, (client.get('total_packages_bought',0) / max(1, client.get('milestone_packages_threshold',500))) * 100)}%; 
@@ -1292,7 +1279,7 @@ if st.session_state.selected_client_id:
                 </div>
                 <div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">
                     {client.get('total_packages_bought', 0)} / {client.get('milestone_packages_threshold', 500)} pacotes
-                    {" • 🎁 MARCO ATINGIDO!" if client.get('has_milestone_500') else f" • Faltam {max(0, client.get('milestone_packages_threshold',500) - client.get('total_packages_bought',0))}"}
+                    {" • MARCO ATINGIDO!" if client.get('has_milestone_500') else f" • Faltam {max(0, client.get('milestone_packages_threshold',500) - client.get('total_packages_bought',0))}"}
                 </div>
             </div>
 
@@ -1307,7 +1294,7 @@ if st.session_state.selected_client_id:
         )
         st.markdown(
             f"""<div style="background:#0f172a; border:1px solid #334155; border-radius:10px; padding:10px 14px; margin: 4px 0 10px;">
-                <div style="font-size:0.82rem; color:#94a3b8;">🎯 PRÓXIMOS PRÊMIOS</div>
+                <div style="font-size:0.82rem; color:#94a3b8;">PRÓXIMOS PRÊMIOS</div>
                 <div style="font-size:0.95rem; font-weight:600; color:#f1f5f9; line-height:1.35;">
                     {rewards['summary_text']}
                 </div>
@@ -1316,19 +1303,19 @@ if st.session_state.selected_client_id:
         )
 
         # ---- EDITAR DADOS DO CLIENTE ----
-        with st.expander("✏️ Editar Cliente (nome, telefone, aniversário)", expanded=False):
+        with st.expander("Editar Cliente (nome, telefone, aniversário)", expanded=False):
             with st.form(f"edit_client_form_{client['id']}"):
                 edit_name = st.text_input("Nome completo *", value=client["name"])
                 edit_phone = st.text_input("Telefone (com DDD) *", value=client["phone"])
                 edit_birthday = st.date_input(
-                    "🎂 Data de aniversário",
+                    "Data de aniversário",
                     value=parse_birthday(client.get("birthday")),
                     min_value=date(1900, 1, 1),
                     max_value=date.today(),
                     format="DD/MM/YYYY",
                     help="Deixe em branco para remover a data de aniversário.",
                 )
-                if st.form_submit_button("💾 Salvar Alterações", type="primary", width='stretch'):
+                if st.form_submit_button("Salvar Alterações", type="primary", width='stretch'):
                     if edit_name.strip() and edit_phone.strip():
                         try:
                             update_client(client["id"], edit_name, edit_phone, edit_birthday)
@@ -1346,7 +1333,7 @@ if st.session_state.selected_client_id:
 
         # ---- REGISTRAR COMPRA ----
         with action_col1:
-            st.markdown("**💰 Registrar Nova Compra**")
+            st.markdown("**Registrar Nova Compra**")
 
             with st.form("register_purchase_form", clear_on_submit=True):
                 purchase_amount = st.number_input(
@@ -1357,7 +1344,7 @@ if st.session_state.selected_client_id:
                     format="%.2f",
                 )
                 purchase_qty = st.number_input(
-                    "Quantidade de pacotes ★ (cada um = +1 ponto)",
+                    "Quantidade de pacotes (cada um = +1 ponto)",
                     min_value=0,
                     value=5,
                     step=1,
@@ -1365,7 +1352,7 @@ if st.session_state.selected_client_id:
                 )
                 purchase_date = st.date_input("Data da compra", value=date.today())
 
-                submitted = st.form_submit_button("✅ Registrar Compra e Conceder Pontos", type="primary", width='stretch')
+                submitted = st.form_submit_button("Registrar Compra e Conceder Pontos", type="primary", width='stretch')
 
                 if submitted:
                     try:
@@ -1442,7 +1429,7 @@ if st.session_state.selected_client_id:
 
         # RESGATE REMOVIDO - versão simples
         with action_col2:
-            st.markdown("**🎁 Recompensa**")
+            st.markdown("**Recompensa**")
             st.caption("Apenas Cafeteira aos 500 pontos. Sem resgate.")
             if client.get("has_milestone_500"):
                 st.success("Cafeteira conquistada!")
@@ -1457,7 +1444,7 @@ if st.session_state.selected_client_id:
         if total_bought >= threshold and not has_claimed:
             st.markdown("---")
             with st.container(border=True):
-                st.markdown("### 🏆🎁 **Recompensa Especial — 500 Pacotes Comprados**")
+                st.markdown("### **Recompensa Especial — 500 Pacotes Comprados**")
                 st.success("Parabéns! Este cliente atingiu o marco de **500 pacotes**. Escolha o brinde/valor que ele deseja receber.")
 
                 # Opções vindas das configurações (totalmente editáveis)
@@ -1472,7 +1459,7 @@ if st.session_state.selected_client_id:
                     claim_notes = st.text_input("Observação (opcional)", value="", key=f"milestone_notes_{client['id']}",
                                                 placeholder="Ex: Entregar na próxima visita / Pix para (tel) / etc.")
                 with col_claim2:
-                    if st.button(f"🎉 CONCEDER {selected_label.upper()}", type="primary", width='stretch', key=f"btn_claim_{client['id']}"):
+                    if st.button(f"CONCEDER {selected_label.upper()}", type="primary", width='stretch', key=f"btn_claim_{client['id']}"):
                         try:
                             claim_result = claim_milestone_reward(
                                 client_id=client["id"],
@@ -1508,14 +1495,14 @@ if st.session_state.selected_client_id:
                         except Exception as e:
                             st.error(f"Erro ao conceder recompensa: {e}")
         elif has_claimed:
-            st.caption(f"✅ Recompensa 500 pacotes já concedida: **{client.get('milestone_500_desc', client.get('milestone_500_choice'))}** em {client.get('milestone_500_date','')}")
+            st.caption(f"Recompensa 500 pacotes já concedida: **{client.get('milestone_500_desc', client.get('milestone_500_choice'))}** em {client.get('milestone_500_date','')}")
 
         # Painel de aviso automático (após compra ou resgate)
         if st.session_state.pending_notification:
             render_notification_panel(st.session_state.pending_notification)
 
         # HISTÓRICO DO CLIENTE
-        st.markdown("**📜 Histórico Completo do Cliente**")
+        st.markdown("**Histórico Completo do Cliente**")
 
         history = get_client_history(client["id"])
 
@@ -1524,8 +1511,8 @@ if st.session_state.selected_client_id:
                 {
                     "Data": h["date"],
                     "Tipo": (
-                        "💰 COMPRA" if h["type"] == "purchase" else
-                        ("🎁 RESGATE" if h["type"] == "redemption" else "🏆 RECOMPENSA ESPECIAL")
+                        "COMPRA" if h["type"] == "purchase" else
+                        ("RESGATE" if h["type"] == "redemption" else "RECOMPENSA ESPECIAL")
                     ),
                     "Valor": format_currency(h["amount"]) if h["amount"] else "—",
                     "Pontos": h["points"],
@@ -1573,7 +1560,7 @@ if st.session_state.selected_client_id:
         # ---- CORRIGIR / REMOVER LANÇAMENTOS DE COMPRA ----
         purchase_entries = [h for h in history if h["type"] == "purchase"]
         if purchase_entries:
-            with st.expander("🛠️ Corrigir ou Remover Lançamentos (erro de digitação)", expanded=False):
+            with st.expander("Corrigir ou Remover Lançamentos (erro de digitação)", expanded=False):
                 st.caption(
                     "Ajuste a quantidade de pacotes ou o valor de uma compra registrada por engano, "
                     "ou remova o lançamento inteiro. Os pontos e o total de pacotes são recalculados na hora."
@@ -1602,8 +1589,8 @@ if st.session_state.selected_client_id:
                             "Data", value=p_date, format="DD/MM/YYYY", key=f"fixdate_{pid}",
                         )
                         bc1, bc2 = st.columns(2)
-                        do_save = bc1.form_submit_button("💾 Salvar correção", type="primary", width='stretch')
-                        do_delete = bc2.form_submit_button("🗑️ Remover lançamento", width='stretch')
+                        do_save = bc1.form_submit_button("Salvar correção", type="primary", width='stretch')
+                        do_delete = bc2.form_submit_button("Remover lançamento", width='stretch')
 
                     if do_save:
                         update_purchase(
@@ -1626,7 +1613,7 @@ if st.session_state.selected_client_id:
 
         # ================== ENVIAR PORTAL DO CLIENTE (O QUE VOCÊ MANDA PRO CLIENTE) ==================
         st.markdown("---")
-        st.markdown("**📤 Enviar Portal do Cliente (o que você envia pro cliente)**")
+        st.markdown("**Enviar Portal do Cliente (o que você envia pro cliente)**")
 
         texts = get_program_texts()
         program_name = texts.get("program_name", "Programa Parceiro Isopor")
@@ -1639,29 +1626,29 @@ if st.session_state.selected_client_id:
 
         col_link1, col_link2 = st.columns(2)
         with col_link1:
-            if st.button("📋 Copiar Link do Portal", width='stretch'):
+            if st.button("Copiar Link do Portal", width='stretch'):
                 st.code(client_link)
                 st.success("Link copiado! Cole no WhatsApp ou e-mail do cliente.")
 
         with col_link2:
             first = get_first_name(client['name'])
             link_msg = f"Olá {first}! Aqui está o seu painel de fidelidade do {program_name}. Acompanhe seus pontos e pacotes: {client_link}"
-            if st.button("📱 Gerar WhatsApp com o Link", width='stretch'):
+            if st.button("Gerar WhatsApp com o Link", width='stretch'):
                 st.code(link_msg)
                 st.caption("Copie e envie para o cliente. O link abre a visão limpa e bonita só dele.")
 
-        with st.expander("👀 Preview do que o cliente vê"):
+        with st.expander("Preview do que o cliente vê"):
             st.markdown(f"**{client['name']}** — {client['phone']}")
             st.markdown(f"Pontos: **{client['current_points']}** / 500")
             st.caption("Interface limpa, sem ferramentas de admin. Perfeita para enviar. (Pontos são cumulativos.)")
 
         # MENSAGENS WHATSAPP PRONTAS
-        st.markdown("**💬 Mensagens Prontas para WhatsApp**")
+        st.markdown("**Mensagens Prontas para WhatsApp**")
 
         msg_col1, msg_col2 = st.columns(2)
 
         with msg_col1:
-            if st.button("📋 Gerar Resumo Mensal", width='stretch'):
+            if st.button("Gerar Resumo Mensal", width='stretch'):
                 summary_msg = create_monthly_summary_message(
                     client["name"],
                     client["monthly_spent"],
@@ -1672,41 +1659,41 @@ if st.session_state.selected_client_id:
                 st.session_state.last_action_message = summary_msg
 
         with msg_col2:
-            if st.button("📋 Mensagem Promocional Geral", width='stretch'):
+            if st.button("Mensagem Promocional Geral", width='stretch'):
                 promo = create_promotional_message()
                 st.code(promo, language=None)
                 st.session_state.last_action_message = promo
 
         # Botão limpar seleção
-        if st.button("✖ Fechar painel deste cliente", on_click=clear_selection, type="secondary", width='stretch'):
+        if st.button("Fechar painel deste cliente", on_click=clear_selection, type="secondary", width='stretch'):
             pass
 
 # ================== SIDEBAR - AÇÕES RÁPIDAS E EXPORT ==================
 with st.sidebar:
     _pstatus = persistence_status()
     if _pstatus["connected"]:
-        st.success(f"💾 {_pstatus['message']}")
+        st.success(f"{_pstatus['message']}")
     elif _pstatus["configured"]:
-        st.warning(f"⚠️ {_pstatus['message']}")
+        st.warning(f"{_pstatus['message']}")
     else:
-        st.warning(f"⚠️ {_pstatus['message']} Configure o Turso para proteger os cadastros (veja SETUP_TURSO.md).")
+        st.warning(f"{_pstatus['message']} Configure o Turso para proteger os cadastros (veja SETUP_TURSO.md).")
 
-    st.markdown("### 🌐 Portal dos Clientes + Servidor Público")
+    st.markdown("### Portal dos Clientes + Servidor Público")
 
     portal_url = PUBLIC_PORTAL_URL or get_public_url() or get_public_base_url()
     is_public = portal_url and "localhost" not in portal_url and "127.0.0.1" not in portal_url
 
     if is_public:
-        st.success("✅ **PORTAL PÚBLICO ATIVO**")
+        st.success("**PORTAL PÚBLICO ATIVO**")
         st.code(portal_url, language=None)
         st.caption("Links dos clientes funcionam para qualquer pessoa com o endereço.")
     else:
-        st.error("🔗 Links dos clientes ainda estão locais (localhost)")
+        st.error("Links dos clientes ainda estão locais (localhost)")
 
         # ==================== ATALHO PRINCIPAL (o que o usuário pediu) ====================
         st.markdown("**Clique uma única vez para ativar tudo:**")
         if st.button(
-            "🚀 ATIVAR AGORA\nLinks dos Clientes + Túnel + Estrutura Completa",
+            "ATIVAR AGORA\nLinks dos Clientes + Túnel + Estrutura Completa",
             type="primary",
             width='stretch',
             key="activate_public_portal_btn"
@@ -1726,7 +1713,7 @@ with st.sidebar:
                         env=os.environ.copy(),
                     )
 
-                    st.success("✅ Comando enviado com sucesso!")
+                    st.success("Comando enviado com sucesso!")
                     st.info("O túnel (cloudflared) está sendo iniciado. Aguarde 15~40 segundos e atualize a página.")
                     time.sleep(2.5)
                     st.rerun()
@@ -1742,28 +1729,28 @@ with st.sidebar:
     # Botão auxiliar rápido
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔄 Verificar URL agora", width='stretch'):
+        if st.button("Verificar URL agora", width='stretch'):
             # Força re-execução da detecção de túnel (o _ensure já faz isso no rerun)
             st.cache_resource.clear()
             st.success("Verificando... recarregando")
             time.sleep(0.8)
             st.rerun()
     with col2:
-        if st.button("📋 Copiar ./serve.sh", width='stretch'):
+        if st.button("Copiar ./serve.sh", width='stretch'):
             st.code("./serve.sh", language="bash")
 
     st.divider()
     render_bulletin_admin_panel()
 
     st.divider()
-    st.markdown("### ⚙️ Ações Rápidas")
+    st.markdown("### Ações Rápidas")
 
-    with st.expander("➕ Cadastrar Novo Cliente", expanded=False):
+    with st.expander("Cadastrar Novo Cliente", expanded=False):
         with st.form("new_client_form"):
             new_name = st.text_input("Nome completo *")
             new_phone = st.text_input("Telefone (com DDD) *", placeholder="(11) 99999-0000")
             new_birthday = st.date_input(
-                "🎂 Data de aniversário (opcional)",
+                "Data de aniversário (opcional)",
                 value=None,
                 min_value=date(1900, 1, 1),
                 max_value=date.today(),
@@ -1787,9 +1774,9 @@ with st.sidebar:
     st.divider()
 
     # Exportar Excel
-    st.markdown("### 📥 Exportar Relatório")
+    st.markdown("### Exportar Relatório")
 
-    if st.button("📊 Gerar Excel Completo", type="primary", width='stretch'):
+    if st.button("Gerar Excel Completo", type="primary", width='stretch'):
         with st.spinner("Gerando relatório profissional..."):
             all_clients = get_all_clients_enriched()
             monthly_hist = get_monthly_purchase_history(months_back=12)
@@ -1805,7 +1792,7 @@ with st.sidebar:
             )
 
             st.download_button(
-                label="⬇️ Baixar Relatório Excel (.xlsx)",
+                label="Baixar Relatório Excel (.xlsx)",
                 data=excel_buffer,
                 file_name=f"parceiro_isopor_relatorio_{date.today().isoformat()}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1816,16 +1803,16 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("### 📘 Manual de Uso")
+    st.markdown("### Manual de Uso")
     if MANUAL_PDF_PATH.exists():
         st.caption(f"Arquivo salvo em: `{MANUAL_PDF_PATH.name}`")
-    if st.button("📄 Gerar / Atualizar Manual (PDF)", type="primary", width='stretch'):
+    if st.button("Gerar / Atualizar Manual (PDF)", type="primary", width='stretch'):
         with st.spinner("Gerando manual em PDF..."):
             saved_path = save_user_manual(get_all_settings())
             pdf_buffer = generate_user_manual(get_all_settings())
             st.success(f"Manual salvo em `{saved_path}`")
             st.download_button(
-                label="⬇️ Baixar Manual de Uso (PDF)",
+                label="Baixar Manual de Uso (PDF)",
                 data=pdf_buffer,
                 file_name=f"manual_parceiro_isopor_{date.today().isoformat()}.pdf",
                 mime="application/pdf",
@@ -1834,22 +1821,22 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("### 📲 Avisos Recentes")
+    st.markdown("### Avisos Recentes")
     recent_notifs = get_recent_notifications(5)
     if recent_notifs:
         for n in recent_notifs:
-            icon = "💰" if n["notification_type"] == "purchase" else ("🎁" if n["notification_type"] == "redemption" else "🏆")
-            st.caption(f"{icon} **{n['client_name']}** — {n['created_at'][:16]} — {n['status']}")
+            tipo = "Compra" if n["notification_type"] == "purchase" else ("Resgate" if n["notification_type"] == "redemption" else "Recompensa")
+            st.caption(f"[{tipo}] **{n['client_name']}** — {n['created_at'][:16]} — {n['status']}")
     else:
         st.caption("Nenhum aviso enviado ainda. Registre uma compra para gerar o primeiro.")
 
     st.divider()
 
     # ================== ALTERAÇÕES MANUAIS — ALTO IMPACTO ==================
-    with st.expander("⚙️ Alterações Manuais", expanded=False):
+    with st.expander("Alterações Manuais", expanded=False):
         s = get_all_settings()
 
-        st.markdown("##### 💬 Mensagem WhatsApp após compra")
+        st.markdown("##### Mensagem WhatsApp após compra")
         st.caption("Enviada automaticamente para cada cliente ao registrar uma compra.")
         with st.form("form_wa_purchase"):
             new_wa_purchase = st.text_area(
@@ -1858,13 +1845,13 @@ with st.sidebar:
                 height=130,
                 label_visibility="collapsed",
             )
-            if st.form_submit_button("💾 Salvar mensagem de compra", type="primary", width='stretch'):
+            if st.form_submit_button("Salvar mensagem de compra", type="primary", width='stretch'):
                 set_setting("whatsapp_purchase", new_wa_purchase)
                 st.success("Salvo.")
                 st.cache_data.clear()
                 st.rerun()
 
-        st.markdown("##### 🏆 Mensagem WhatsApp ao bater a meta")
+        st.markdown("##### Mensagem WhatsApp ao bater a meta")
         st.caption("Enviada quando o cliente atinge 500 pontos e ganha a recompensa.")
         with st.form("form_wa_milestone"):
             new_wa_milestone = st.text_area(
@@ -1873,13 +1860,13 @@ with st.sidebar:
                 height=100,
                 label_visibility="collapsed",
             )
-            if st.form_submit_button("💾 Salvar mensagem de meta", type="primary", width='stretch'):
+            if st.form_submit_button("Salvar mensagem de meta", type="primary", width='stretch'):
                 set_setting("whatsapp_milestone_500", new_wa_milestone)
                 st.success("Salvo.")
                 st.cache_data.clear()
                 st.rerun()
 
-        st.markdown("##### 🎯 Meta e Recompensa")
+        st.markdown("##### Meta e Recompensa")
         with st.form("form_meta"):
             meta_col1, meta_col2 = st.columns(2)
             with meta_col1:
@@ -1893,14 +1880,14 @@ with st.sidebar:
                     "Recompensa (ex: Cafeteira, Voucher R$ 200)",
                     value=s.get("milestone_reward", "Cafeteira"),
                 )
-            if st.form_submit_button("💾 Salvar meta e recompensa", type="primary", width='stretch'):
+            if st.form_submit_button("Salvar meta e recompensa", type="primary", width='stretch'):
                 set_setting("milestone_packages_threshold", str(int(new_threshold)))
                 set_setting("milestone_reward", new_reward)
                 st.success("Salvo.")
                 st.cache_data.clear()
                 st.rerun()
 
-        st.markdown("##### 📛 Nome do Programa")
+        st.markdown("##### Nome do Programa")
         st.caption("Aparece no dashboard, nos cards e no portal do cliente.")
         with st.form("form_name"):
             new_program_name = st.text_input(
@@ -1912,14 +1899,14 @@ with st.sidebar:
                 "Subtítulo (linha fina abaixo do nome)",
                 value=s.get("program_subtitle", ""),
             )
-            if st.form_submit_button("💾 Salvar nome", type="primary", width='stretch'):
+            if st.form_submit_button("Salvar nome", type="primary", width='stretch'):
                 set_setting("program_name", new_program_name)
                 set_setting("program_subtitle", new_subtitle)
                 st.success("Salvo.")
                 st.cache_data.clear()
                 st.rerun()
 
-        st.markdown("##### 📜 Regras visíveis ao cliente")
+        st.markdown("##### Regras visíveis ao cliente")
         st.caption("Exibidas no portal do cliente e na sidebar. Suporta Markdown.")
         with st.form("form_rules"):
             new_rules = st.text_area(
@@ -1933,14 +1920,14 @@ with st.sidebar:
                 value=s.get("client_portal_intro", ""),
                 height=60,
             )
-            if st.form_submit_button("💾 Salvar regras", type="primary", width='stretch'):
+            if st.form_submit_button("Salvar regras", type="primary", width='stretch'):
                 set_setting("sidebar_rules_text", new_rules)
                 set_setting("client_portal_intro", new_client_intro)
                 st.success("Salvo.")
                 st.cache_data.clear()
                 st.rerun()
 
-        st.markdown("##### ⚡ Automação")
+        st.markdown("##### Automação")
         with st.form("form_auto"):
             new_auto_notify = st.checkbox(
                 "Gerar aviso automático ao conceder pontos",
@@ -1950,7 +1937,7 @@ with st.sidebar:
                 "Abrir WhatsApp automaticamente após compra",
                 value=s.get("auto_open_whatsapp", "true").lower() == "true",
             )
-            if st.form_submit_button("💾 Salvar automação", width='stretch'):
+            if st.form_submit_button("Salvar automação", width='stretch'):
                 set_setting("auto_notify_whatsapp", "true" if new_auto_notify else "false")
                 set_setting("auto_open_whatsapp", "true" if new_auto_open else "false")
                 st.success("Salvo.")
@@ -1958,7 +1945,7 @@ with st.sidebar:
 
         # ── Histórico completo de alterações ──────────────────────────────────
         st.divider()
-        st.markdown("##### 📋 Histórico de Alterações")
+        st.markdown("##### Histórico de Alterações")
         st.caption("Tudo que foi alterado manualmente desde o último reset.")
 
         changelog = get_settings_changelog(limit=200)
@@ -1988,7 +1975,7 @@ with st.sidebar:
         st.divider()
         st.markdown("**Zerar dados para uso real**")
         st.warning("Remove TODOS os clientes, compras e o histórico de alterações. Configurações são mantidas.")
-        if st.button("🗑️ ZERAR TODOS OS DADOS DE CLIENTES (irrevogável)", type="secondary", width='stretch'):
+        if st.button("ZERAR TODOS OS DADOS DE CLIENTES (irrevogável)", type="secondary", width='stretch'):
             if st.session_state.get("confirm_reset", False):
                 reset_client_data(keep_settings=True)
                 st.success("Dados zerados. Sistema pronto para uso real.")
@@ -2001,19 +1988,19 @@ with st.sidebar:
 
     # Mensagem geral
     st.divider()
-    st.markdown("### 📢 Divulgação")
-    if st.button("📋 Copiar texto de divulgação do programa", width='stretch'):
+    st.markdown("### Divulgação")
+    if st.button("Copiar texto de divulgação do programa", width='stretch'):
         promo = create_promotional_message()
         st.code(promo, language=None)
 
     st.divider()
 
-    st.markdown("### ℹ️ Regras do Programa")
+    st.markdown("### Regras do Programa")
     rules_text = ALL_SETTINGS.get("sidebar_rules_text", "")
     st.markdown(rules_text)
 
     st.divider()
-    st.caption("IsoSoluções • 2026\nDashboard feito para impressionar 💚")
+    st.caption("IsoSoluções • 2026\nDashboard feito para impressionar ")
 
 # ================== FOOTER ==================
 footer = ALL_SETTINGS.get("footer_text", "IsoSoluções")
